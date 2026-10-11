@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>html-spiele</title>
+<style>
+:root { --bg:#F2F0F5; --ink:#211D2E; --ink-2:#6A6480; --line:#DAD5E3; --card:#FFFFFF; --accent:#6A51A8; }
+@media (prefers-color-scheme: dark) { :root { --bg:#16141F; --ink:#ECE8F3; --ink-2:#A39DB8; --line:#2E2A40; --card:#1F1C2B; --accent:#B7A4EA; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; padding:48px 16px; }
+main { max-width:560px; margin:0 auto; display:flex; flex-direction:column; gap:24px; }
+h1 { margin:0; font-size:28px; }
+p { margin:0; color:var(--ink-2); }
+ul { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px; }
+a { display:block; padding:16px 18px; background:var(--card); border:1px solid var(--line); border-radius:12px; color:inherit; text-decoration:none; }
+a:hover, a:focus-visible { border-color:var(--accent); outline:none; }
+a b { display:block; color:var(--accent); font-size:18px; }
+a span { color:var(--ink-2); font-size:14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>html-spiele</h1>
+  <p>Kleine Browser-Programme, jeweils eine einzelne HTML-Datei.</p>
+  <ul>
+    <li><a href="tetris.html"><b>Tetris</b><span>Klon mit Hold, Vorschau, Ghost-Stein und Rekord. Tastatur oder Touch.</span></a></li>
+    <li><a href="atemraum.html"><b>Atemraum</b><span>Atem-App mit pulsierendem Kreis, vier Rhythmen und ruhigem Klang.</span></a></li>
+  </ul>
+</main>
+</body>
+</html>
