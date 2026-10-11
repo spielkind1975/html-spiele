@@ -1,0 +1,635 @@
+<title>Atemraum</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@1,6..72,300;1,6..72,400&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: eine ruhige Spalte; oben der Atemkreis als Mittelpunkt, darunter Phase und Zeit, unten die Einstellungen.
+   Farben: vier bewusst gewählte Stimmungen, unabhängig vom System-Theme. Standard ist "Dämmerung". */
+:root {
+  --bg: #1A1830;
+  --glow: #3A2C55;
+  --surface: #232040;
+  --ink: #EEE8F4;
+  --ink-2: #A49FBF;
+  --line: #36325C;
+  --orb-light: #FFE6CC;
+  --orb: #F2A97E;
+  --orb-deep: #B5596E;
+  --accent: #F4B08A;
+  --accent-ink: #1A1830;
+  --font-display: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+:root[data-mood="tiefsee"] {
+  --bg: #071A2B;
+  --glow: #0F3550;
+  --surface: #0D2438;
+  --ink: #E2EEF6;
+  --ink-2: #89A3B8;
+  --line: #1C3A55;
+  --orb-light: #D8F3FF;
+  --orb: #56A9DC;
+  --orb-deep: #1D4C8C;
+  --accent: #7FC6EF;
+  --accent-ink: #071A2B;
+  color-scheme: dark;
+}
+:root[data-mood="glut"] {
+  --bg: #1C1411;
+  --glow: #3A2117;
+  --surface: #281D18;
+  --ink: #F3E9DF;
+  --ink-2: #B39F8F;
+  --line: #3F2E26;
+  --orb-light: #FFEBBE;
+  --orb: #F2B35C;
+  --orb-deep: #BF4F2D;
+  --accent: #F2B35C;
+  --accent-ink: #1C1411;
+  color-scheme: dark;
+}
+:root[data-mood="morgen"] {
+  --bg: #EFEAF5;
+  --glow: #FBE9EE;
+  --surface: #F9F6FC;
+  --ink: #2B2340;
+  --ink-2: #6C6384;
+  --line: #D9D0E4;
+  --orb-light: #FFFFFF;
+  --orb: #BBA6E6;
+  --orb-deep: #7A5FB8;
+  --accent: #6A51A8;
+  --accent-ink: #FFFFFF;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  background: radial-gradient(ellipse 90% 60% at 50% 18%, var(--glow) 0%, transparent 70%), var(--bg);
+  transition: background-color .6s;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-block: 24px 40px;
+  padding-inline: 16px;
+}
+.app { max-width: 520px; margin-inline: auto; display: flex; flex-direction: column; gap: 28px; }
+
+.head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1;
+}
+.tag { margin: 0; color: var(--ink-2); font-size: 13px; }
+
+/* Atemkreis */
+.stage {
+  position: relative;
+  width: min(100%, 340px);
+  aspect-ratio: 1;
+  max-width: 100%;
+  margin-inline: auto;
+}
+.ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring circle { fill: none; }
+.ring .track { stroke: var(--line); stroke-width: 0.6; }
+.ring .prog { stroke: var(--accent); stroke-width: 1.2; stroke-linecap: round; }
+.orb-box { position: absolute; inset: 8%; }
+.orb {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--orb);
+  background: radial-gradient(circle at 36% 32%, var(--orb-light) 0%, var(--orb) 48%, var(--orb-deep) 100%);
+  box-shadow: 0 0 60px 6px color-mix(in srgb, var(--orb) 35%, transparent);
+  transform: scale(0.5);
+  will-change: transform;
+}
+.guide {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px dashed var(--line);
+}
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
+  text-align: center;
+}
+.word {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(30px, 8vw, 40px);
+  line-height: 1.1;
+  color: var(--ink);
+  text-shadow: 0 0 18px var(--bg);
+}
+.count {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  min-height: 1.5em;
+  text-shadow: 0 0 12px var(--bg);
+}
+
+.meta {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  margin: -8px 0 0;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.meta b { color: var(--ink); font-weight: 600; font-size: 15px; }
+
+.start {
+  align-self: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 16px;
+  padding: 14px 40px;
+  min-width: 180px;
+  cursor: pointer;
+  transition: filter .2s;
+}
+.start:hover { filter: brightness(1.08); }
+.start.stop { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+
+/* Einstellungen */
+.settings { display: flex; flex-direction: column; gap: 20px; border-top: 1px solid var(--line); padding-top: 22px; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+legend, .lbl {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.seg { display: grid; gap: 6px; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+.seg.small { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  cursor: pointer;
+  min-width: 0;
+  transition: box-shadow .15s, background .15s;
+}
+.seg label span { font-weight: 600; font-size: 14px; }
+.seg label small { color: var(--ink-2); font-size: 12px; font-variant-numeric: tabular-nums; }
+.seg.small label { align-items: center; text-align: center; padding: 9px 4px; }
+.seg input:checked + label { box-shadow: inset 0 0 0 2px var(--accent); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg input:disabled + label { opacity: .5; cursor: default; }
+
+.row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.row label.lbl { margin: 0; }
+input[type="range"] { flex: 1 1 160px; accent-color: var(--accent); min-width: 0; }
+.check { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+.start:focus-visible, input[type="range"]:focus-visible, .check input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.sw {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-bottom: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.15);
+}
+.sw-daemmerung { background: radial-gradient(circle at 36% 32%, #FFE6CC, #F2A97E 50%, #B5596E 100%), #1A1830; }
+.sw-tiefsee { background: radial-gradient(circle at 36% 32%, #D8F3FF, #56A9DC 50%, #1D4C8C 100%); }
+.sw-glut { background: radial-gradient(circle at 36% 32%, #FFEBBE, #F2B35C 50%, #BF4F2D 100%); }
+.sw-morgen { background: radial-gradient(circle at 36% 32%, #FFFFFF, #BBA6E6 50%, #7A5FB8 100%); }
+
+.note { margin: 0; color: var(--ink-2); font-size: 12.5px; max-width: 60ch; }
+</style>
+
+<main class="app">
+  <header class="head">
+    <h1>Atemraum</h1>
+    <p class="tag">Ruhig atmen im vorgegebenen Takt</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="track" cx="50" cy="50" r="48"></circle>
+      <circle class="prog" id="prog" cx="50" cy="50" r="48"></circle>
+    </svg>
+    <div class="orb-box">
+      <div class="guide"></div>
+      <div class="orb" id="orb"></div>
+    </div>
+    <div class="center">
+      <p class="word" id="word" aria-live="polite">Bereit</p>
+      <p class="count" id="count">Atme einfach mit dem Kreis</p>
+    </div>
+  </div>
+
+  <p class="meta">
+    <span><b id="time">5:00</b> &nbsp;verbleibend</span>
+    <span><b id="breaths">0</b> &nbsp;Atemzüge</span>
+  </p>
+
+  <button class="start" id="startBtn" type="button">Beginnen</button>
+
+  <section class="settings" aria-label="Einstellungen">
+    <fieldset id="patternSet">
+      <legend>Rhythmus</legend>
+      <div class="seg">
+        <input type="radio" name="pattern" id="p-coherent" value="coherent" checked>
+        <label for="p-coherent"><span>Kohärent</span><small>5,5 s ein · 5,5 s aus</small></label>
+        <input type="radio" name="pattern" id="p-ext" value="ext">
+        <label for="p-ext"><span>Länger aus</span><small>4 s ein · 6 s aus</small></label>
+        <input type="radio" name="pattern" id="p-box" value="box">
+        <label for="p-box"><span>Box</span><small>4 · 4 · 4 · 4 s</small></label>
+        <input type="radio" name="pattern" id="p-478" value="478">
+        <label for="p-478"><span>4-7-8</span><small>4 ein · 7 halten · 8 aus</small></label>
+      </div>
+    </fieldset>
+
+    <fieldset id="durSet">
+      <legend>Dauer</legend>
+      <div class="seg small">
+        <input type="radio" name="dur" id="d-3" value="180">
+        <label for="d-3"><span>3 min</span></label>
+        <input type="radio" name="dur" id="d-5" value="300" checked>
+        <label for="d-5"><span>5 min</span></label>
+        <input type="radio" name="dur" id="d-10" value="600">
+        <label for="d-10"><span>10 min</span></label>
+        <input type="radio" name="dur" id="d-0" value="0">
+        <label for="d-0"><span>Offen</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Klang</legend>
+      <div class="seg small">
+        <input type="radio" name="sound" id="s-drone" value="drone" checked>
+        <label for="s-drone"><span>Fläche</span></label>
+        <input type="radio" name="sound" id="s-sea" value="sea">
+        <label for="s-sea"><span>Meer</span></label>
+        <input type="radio" name="sound" id="s-both" value="both">
+        <label for="s-both"><span>Beides</span></label>
+        <input type="radio" name="sound" id="s-off" value="off">
+        <label for="s-off"><span>Aus</span></label>
+      </div>
+      <div class="row">
+        <label class="lbl" for="vol">Lautstärke</label>
+        <input type="range" id="vol" min="0" max="100" value="60">
+      </div>
+      <label class="check" for="chime"><input type="checkbox" id="chime" checked> Sanfter Ton bei jedem Wechsel</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Farbstimmung</legend>
+      <div class="seg small">
+        <input type="radio" name="mood" id="m-daemmerung" value="daemmerung" checked>
+        <label for="m-daemmerung"><span class="sw sw-daemmerung"></span><span>Dämmerung</span></label>
+        <input type="radio" name="mood" id="m-tiefsee" value="tiefsee">
+        <label for="m-tiefsee"><span class="sw sw-tiefsee"></span><span>Tiefsee</span></label>
+        <input type="radio" name="mood" id="m-glut" value="glut">
+        <label for="m-glut"><span class="sw sw-glut"></span><span>Glut</span></label>
+        <input type="radio" name="mood" id="m-morgen" value="morgen">
+        <label for="m-morgen"><span class="sw sw-morgen"></span><span>Morgen</span></label>
+      </div>
+    </fieldset>
+
+    <p class="note">Atme durch die Nase ein und langsam aus. Wenn dir schwindelig wird, atme normal weiter. Mit der Leertaste startest und beendest du eine Runde.</p>
+  </section>
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  const PATTERNS = {
+    coherent: [['in', 5.5], ['out', 5.5]],
+    ext:      [['in', 4], ['out', 6]],
+    box:      [['in', 4], ['hold', 4], ['out', 4], ['rest', 4]],
+    '478':    [['in', 4], ['hold', 7], ['out', 8]]
+  };
+  const WORDS = { in: 'Einatmen', hold: 'Halten', out: 'Ausatmen', rest: 'Pause' };
+  const MIN = 0.42, MAX = 1, IDLE = 0.5;
+
+  const $ = id => document.getElementById(id);
+  const orb = $('orb'), word = $('word'), count = $('count'), timeEl = $('time'), breathsEl = $('breaths');
+  const prog = $('prog'), startBtn = $('startBtn'), vol = $('vol'), chime = $('chime');
+  const CIRC = 2 * Math.PI * 48;
+  prog.style.strokeDasharray = CIRC.toFixed(2);
+  prog.style.strokeDashoffset = CIRC.toFixed(2);
+
+  const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ease = x => 0.5 - 0.5 * Math.cos(Math.PI * x);
+  const val = name => document.querySelector('input[name="' + name + '"]:checked').value;
+  const mmss = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
+  // ---------- Klang ----------
+  const sound = {
+    ctx: null,
+    init() {
+      if (this.ctx) return;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      const ctx = this.ctx = new AC();
+
+      this.master = ctx.createGain();
+      this.master.gain.value = 0;
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -18; comp.ratio.value = 3;
+      this.master.connect(comp).connect(ctx.destination);
+
+      // Klangfläche: leicht verstimmte Grundtöne in A, durch einen atmenden Tiefpass
+      this.droneFilter = ctx.createBiquadFilter();
+      this.droneFilter.type = 'lowpass';
+      this.droneFilter.frequency.value = 320;
+      this.droneFilter.Q.value = 0.6;
+      this.droneBreath = ctx.createGain();
+      this.droneBreath.gain.value = 0.6;
+      this.droneSel = ctx.createGain();
+      this.droneSel.gain.value = 0;
+      this.droneFilter.connect(this.droneBreath).connect(this.droneSel).connect(this.master);
+      [[110, 'triangle', 0.16], [110.35, 'sine', 0.14], [164.81, 'sine', 0.09], [220.4, 'triangle', 0.05], [329.63, 'sine', 0.025]]
+        .forEach(([f, type, g]) => {
+          const o = ctx.createOscillator(); o.type = type; o.frequency.value = f;
+          const gn = ctx.createGain(); gn.gain.value = g;
+          o.connect(gn).connect(this.droneFilter); o.start();
+        });
+
+      // Meer: rosa Rauschen, das mit dem Einatmen anrollt und mit dem Ausatmen zurückweicht
+      const len = ctx.sampleRate * 6;
+      const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = buf.getChannelData(ch);
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+        for (let i = 0; i < len; i++) {
+          const w = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759;
+          b2 = 0.96900 * b2 + w * 0.1538520; b3 = 0.86650 * b3 + w * 0.3104856;
+          b4 = 0.55000 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.0168980;
+          d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
+          b6 = w * 0.115926;
+        }
+        const fade = Math.floor(ctx.sampleRate * 0.05);
+        for (let i = 0; i < fade; i++) { const k = i / fade; d[i] *= k; d[len - 1 - i] *= k; }
+      }
+      const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+      this.seaFilter = ctx.createBiquadFilter();
+      this.seaFilter.type = 'lowpass';
+      this.seaFilter.frequency.value = 450;
+      this.seaBreath = ctx.createGain();
+      this.seaBreath.gain.value = 0.3;
+      this.seaSel = ctx.createGain();
+      this.seaSel.gain.value = 0;
+      src.connect(this.seaFilter).connect(this.seaBreath).connect(this.seaSel).connect(this.master);
+      src.start();
+    },
+    glide(param, to, tc) {
+      const t = this.ctx.currentTime;
+      param.cancelScheduledValues(t);
+      param.setValueAtTime(param.value, t);
+      param.setTargetAtTime(to, t, tc);
+    },
+    setMode(mode, tc) {
+      if (!this.ctx) return;
+      const tcx = tc === undefined ? 0.4 : tc;
+      this.glide(this.droneSel.gain, mode === 'drone' || mode === 'both' ? 1 : 0, tcx);
+      this.glide(this.seaSel.gain, mode === 'sea' || mode === 'both' ? 1.6 : 0, tcx);
+    },
+    setVolume(v) {
+      if (!this.ctx || !this.on) return;
+      this.glide(this.master.gain, v, 0.15);
+    },
+    start(v, mode) {
+      this.init();
+      if (!this.ctx) return;
+      clearTimeout(this.sleep);
+      this.ctx.resume();
+      this.on = true;
+      this.setMode(mode, 0.05);
+      this.glide(this.master.gain, v, 0.8);
+    },
+    stop() {
+      if (!this.ctx) return;
+      this.on = false;
+      this.glide(this.master.gain, 0, 0.6);
+      this.sleep = setTimeout(() => { if (!this.on) this.ctx.suspend(); }, 3500);
+    },
+    phase(type, dur) {
+      if (!this.ctx || !this.on) return;
+      const tc = Math.max(0.3, dur / 3);
+      if (type === 'in') {
+        this.glide(this.droneFilter.frequency, 1100, tc);
+        this.glide(this.droneBreath.gain, 1, tc);
+        this.glide(this.seaFilter.frequency, 1500, tc);
+        this.glide(this.seaBreath.gain, 1, tc);
+      } else if (type === 'out') {
+        this.glide(this.droneFilter.frequency, 300, tc);
+        this.glide(this.droneBreath.gain, 0.55, tc);
+        this.glide(this.seaFilter.frequency, 380, tc);
+        this.glide(this.seaBreath.gain, 0.22, tc);
+      } else {
+        const t = this.ctx.currentTime;
+        [this.droneFilter.frequency, this.droneBreath.gain, this.seaFilter.frequency, this.seaBreath.gain].forEach(p => {
+          p.cancelScheduledValues(t); p.setValueAtTime(p.value, t);
+        });
+      }
+      if (chime.checked) this.bell(type);
+    },
+    bell(type) {
+      const ctx = this.ctx, t = ctx.currentTime + 0.01;
+      const f = { in: 659.25, hold: 554.37, out: 440, rest: 369.99 }[type];
+      [[f, 0.07, 3.2], [f * 2.01, 0.018, 1.6], [f * 3.0, 0.007, 0.9]].forEach(([fr, g, decay]) => {
+        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
+        const gn = ctx.createGain();
+        gn.gain.setValueAtTime(0.0001, t);
+        gn.gain.exponentialRampToValueAtTime(g, t + 0.025);
+        gn.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+        o.connect(gn).connect(this.master);
+        o.start(t); o.stop(t + decay + 0.1);
+      });
+    }
+  };
+
+  // ---------- Ablauf ----------
+  let running = false, t0 = 0, sessionSec = 300, phases = PATTERNS.coherent;
+  let lastIdx = -1, lastCycle = -1, breaths = 0, cur = IDLE, wakeLock = null, finished = false;
+
+  function volume() { return (vol.value / 100) * 0.9; }
+
+  function setInputsLocked(lock) {
+    document.querySelectorAll('#patternSet input, #durSet input').forEach(i => { i.disabled = lock; });
+  }
+
+  async function keepAwake() {
+    try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { wakeLock = null; }
+  }
+  function releaseAwake() { try { if (wakeLock) wakeLock.release(); } catch (e) {} wakeLock = null; }
+
+  function start() {
+    phases = PATTERNS[val('pattern')];
+    sessionSec = parseInt(val('dur'), 10);
+    running = true; finished = false;
+    t0 = performance.now();
+    lastIdx = -1; lastCycle = -1; breaths = 0;
+    breathsEl.textContent = '0';
+    timeEl.parentElement.lastChild.textContent = sessionSec ? '  verbleibend' : '  vergangen';
+    startBtn.textContent = 'Beenden';
+    startBtn.classList.add('stop');
+    setInputsLocked(true);
+    const mode = val('sound');
+    if (mode !== 'off' || chime.checked) sound.start(volume(), mode);
+    keepAwake();
+  }
+
+  function stop(done) {
+    running = false;
+    finished = !!done;
+    sound.stop();
+    releaseAwake();
+    startBtn.textContent = done ? 'Noch eine Runde' : 'Beginnen';
+    startBtn.classList.remove('stop');
+    setInputsLocked(false);
+    prog.style.strokeDashoffset = CIRC.toFixed(2);
+    if (done) {
+      word.textContent = 'Gut gemacht';
+      count.textContent = breaths + (breaths === 1 ? ' Atemzug' : ' Atemzüge');
+    } else {
+      word.textContent = 'Bereit';
+      count.textContent = 'Atme einfach mit dem Kreis';
+      showIdleTime();
+    }
+  }
+
+  function showIdleTime() {
+    const s = parseInt(val('dur'), 10);
+    timeEl.textContent = s ? mmss(s) : '∞';
+    timeEl.parentElement.lastChild.textContent = s ? '  verbleibend' : '  ohne Ende';
+  }
+
+  function frame(now) {
+    if (running) {
+      const e = (now - t0) / 1000;
+      const cyc = phases.reduce((a, p) => a + p[1], 0);
+      const ci = Math.floor(e / cyc);
+      let p = e - ci * cyc, idx = 0;
+      while (idx < phases.length - 1 && p >= phases[idx][1]) { p -= phases[idx][1]; idx++; }
+
+      if (ci !== lastCycle || idx !== lastIdx) {
+        if (lastCycle >= 0 && ci !== lastCycle) {
+          breaths++;
+          breathsEl.textContent = String(breaths);
+          if (sessionSec && e >= sessionSec) {
+            stop(true);
+            requestAnimationFrame(frame);
+            return;
+          }
+        }
+        lastCycle = ci; lastIdx = idx;
+        const [type, dur] = phases[idx];
+        word.textContent = WORDS[type];
+        sound.phase(type, dur - p);
+      }
+
+      const [type, dur] = phases[idx];
+      const f = Math.min(1, p / dur);
+      let s;
+      if (type === 'in') s = MIN + (MAX - MIN) * ease(f);
+      else if (type === 'out') s = MAX - (MAX - MIN) * ease(f);
+      else if (type === 'hold') s = MAX;
+      else s = MIN;
+      cur = s;
+
+      count.textContent = String(Math.max(1, Math.ceil(dur - p)));
+      prog.style.strokeDashoffset = (CIRC * (1 - f)).toFixed(2);
+      if (sessionSec) {
+        timeEl.textContent = mmss(sessionSec - e);
+      } else {
+        timeEl.textContent = mmss(e);
+      }
+    } else {
+      const target = REDUCED ? IDLE : IDLE + 0.025 * Math.sin(now / 1400);
+      cur += (target - cur) * 0.04;
+    }
+    orb.style.transform = 'scale(' + cur.toFixed(4) + ')';
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- Bedienung ----------
+  startBtn.addEventListener('click', () => { running ? stop(false) : start(); });
+
+  document.addEventListener('keydown', e => {
+    if (e.code !== 'Space' || e.repeat) return;
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'button' || tag === 'input') return;
+    e.preventDefault();
+    running ? stop(false) : start();
+  });
+
+  document.querySelectorAll('input[name="sound"]').forEach(i => i.addEventListener('change', () => {
+    if (!running) return;
+    const mode = val('sound');
+    if (!sound.on && (mode !== 'off' || chime.checked)) sound.start(volume(), mode);
+    else sound.setMode(mode);
+  }));
+  chime.addEventListener('change', () => {
+    if (running && chime.checked && !sound.on) sound.start(volume(), val('sound'));
+  });
+  vol.addEventListener('input', () => sound.setVolume(volume()));
+  document.querySelectorAll('input[name="dur"]').forEach(i => i.addEventListener('change', () => {
+    if (!running && !finished) showIdleTime();
+    if (finished) { finished = false; word.textContent = 'Bereit'; count.textContent = 'Atme einfach mit dem Kreis'; showIdleTime(); }
+  }));
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && running && !wakeLock) keepAwake();
+  });
+
+  // ---------- Farbstimmung ----------
+  function applyMood(m) {
+    if (m === 'daemmerung') delete document.documentElement.dataset.mood;
+    else document.documentElement.dataset.mood = m;
+  }
+  let savedMood = null;
+  try { savedMood = localStorage.getItem('atemraum-stimmung'); } catch (e) {}
+  if (savedMood && document.getElementById('m-' + savedMood)) {
+    document.getElementById('m-' + savedMood).checked = true;
+    applyMood(savedMood);
+  }
+  document.querySelectorAll('input[name="mood"]').forEach(i => i.addEventListener('change', () => {
+    applyMood(i.value);
+    try { localStorage.setItem('atemraum-stimmung', i.value); } catch (e) {}
+  }));
+
+  showIdleTime();
+  requestAnimationFrame(frame);
+})();
+</script>
